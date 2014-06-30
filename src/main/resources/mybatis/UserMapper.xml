@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace必须指向Dao接口 -->
+<mapper namespace="com.wismay.erp.repository.UserDao">
+	<resultMap id="userMap" type="com.wismay.erp.entity.User">
+		<id property="id" column="id" />
+		<result property="loginName" column="login_name" />
+		<result property="name" column="name" />
+		<result property="plainPassword" column="plain_password" />
+		<result property="password" column="password" />
+		<result property="salt" column="salt" />
+		<result property="roles" column="roles" />
+		<result property="registerDate" column="register_date" />
+	</resultMap>
+
+	<select id="findByLoginName" parameterType="string" resultMap="userMap">
+		select * from t_user t where t.login_name=#{loginName}
+	</select>
+	
+	<!--
+		获取用户: 输出直接映射到对象, login_name列要"as loginName"以方便映射 ,team_id as "team.id"创建team对象并赋值
+	-->
+	<select id="get" parameterType="int" resultMap="userMap">
+		select *from t_user where id=#{id}
+	</select>
+	
+	<!-- 查询所有用户 -->
+	<select id="getAll" resultMap="userMap">
+		select * from t_user
+	</select>
+
+	
+	<!-- 查询用户,演示: 1.输入用map传入多个参数 2.<where>语句, 智能添加where和and关键字 3.输出直接映射对象 -->
+	<select id="searchPage" parameterType="map" resultMap="userMap">
+		select * from t_user t 
+		<where>
+			<if test="true">
+				AND t.disabled=1
+			</if>
+			<if test="user.loginName != null and user.loginName != '' ">
+				AND login_name like "%"#{user.loginName}"%" 
+			</if>
+			<if test="user.name != null and user.name != '' ">
+				AND name like "%"#{user.name}"%"
+			</if>
+			<if test="user.registerDate != null and user.registerDate != '' ">
+				AND DATE_FORMAT(t.register_date,'%Y-%m-%d')=DATE_FORMAT(#{user.registerDate},'%Y-%m-%d')
+			</if>
+		</where>
+		order by id DESC 
+		LIMIT #{pageStart},#{pageSize}
+	</select>
+	
+	<select id="searchCount" parameterType="map" resultType="Long">
+		select count(1) from t_user t 
+		<where>
+			<if test="true">
+				AND t.disabled=1
+			</if>
+			<if test="loginName != null and loginName != '' ">
+				AND login_name like "%"#{loginName}"%"
+			</if>
+			<if test="name != null and name != '' ">
+				AND name  like "%"#{name}"%"
+			</if>
+			<if test="registerDate != null and registerDate != '' ">
+				AND DATE_FORMAT(t.register_date,'%Y-%m-%d')=DATE_FORMAT(#{registerDate},'%Y-%m-%d')
+			</if>
+		</where>
+	</select>
+
+	<!-- 插入用户： 1.由数据库生成id并赋值到user对象 2.输入用对象, 嵌套属性表达式#{team.id} -->
+	<insert id="save" parameterType="com.wismay.erp.entity.User" useGeneratedKeys="true" keyProperty="id">
+		insert into t_user (
+		login_name, name, password, salt, roles,register_date)
+		values (
+			#{loginName}, #{name}, #{password}, #{salt}, #{roles}, #{registerDate})
+	</insert>
+	
+	<!-- 更新用户： 1.由数据库生成id并赋值到user对象 2.输入用对象, 嵌套属性表达式#{team.id} -->
+	<update id="update" parameterType="com.wismay.erp.entity.User">
+		update t_user t set 
+			t.`name`=#{name} 
+			<if test="password != null and password != '' ">
+				,password=#{password},salt=#{salt}
+			</if>
+		where t.login_name=#{loginName}
+	</update>
+	
+	<!-- 删除用户 -->
+	<delete id="delete" parameterType="int">
+	     update t_user set disabled=0 where id=#{id}
+	</delete>
+	
+
+</mapper> 

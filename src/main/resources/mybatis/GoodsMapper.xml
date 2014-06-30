@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace必须指向Dao接口 -->
+<mapper namespace="com.wismay.erp.repository.UserDao">
+	<resultMap id="goodsMap" type="com.wismay.erp.entity.Goods">
+		<id property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="tag" column="tag" />
+		<result property="cost" column="cost" />
+		<result property="price" column="price" />
+		<result property="number" column="number" />
+		<result property="unit" column="unit" />
+		<result property="sale" column="sale" />
+		<result property="deleted" column="deleted" />
+		
+	</resultMap>
+
+	
+	<select id="get" parameterType="int" resultMap="goodsMap">
+		select *from b_goods where id=#{id}
+	</select>
+	
+	<!-- 查询所有 -->
+	<select id="getAll" resultMap="goodsMap">
+		select * from b_goods
+	</select>
+
+	
+	<!-- 查询用户,演示: 1.输入用map传入多个参数 2.<where>语句, 智能添加where和and关键字 3.输出直接映射对象 -->
+	<select id="searchPage" parameterType="map" resultMap="goodsMap">
+		select * from b_goods t 
+		<where>
+			<if test="ture">
+				AND deleted =0
+			</if>
+			<if test="goods.name != null and goods.name != '' ">
+				AND name like "%"#{goods.name}"%"
+			</if>
+		</where>
+		order by id DESC 
+		LIMIT #{pageStart},#{pageSize}
+	</select>
+	
+	<select id="searchCount" parameterType="map" resultType="Long">
+		select count(1) from b_goods t 
+		<where>
+			<if test="ture">
+				AND deleted =0
+			</if>
+			<if test="goods.name != null and goods.name != '' ">
+				AND name like "%"#{goods.name}"%"
+			</if>
+		</where>
+	</select>
+
+	<!-- 新增 -->
+	<insert id="add" parameterType="com.wismay.erp.entity.Goods" useGeneratedKeys="true" keyProperty="id">
+		insert into b_goods (name, tag, cost, price, number, unit, sale, deleted)
+		    values (#{name}, #{tag}, #{cost}, #{price}, #{number}, #{unit}, #{sale}, #{deleted})
+	</insert>
+	
+	<!-- 更新 -->
+	<update id="update" parameterType="com.wismay.erp.entity.Goods">
+		update b_goods t set 
+			t.`name`=#{name},
+			t.`tag`=#{tag},
+			t.`cost`=#{cost},
+			t.`price`=#{price},
+			t.`number`=#{number},
+			t.`unit`=#{unit},
+			t.`sale`=#{sale},
+			t.`deleted`=#{deleted}
+		where t.id=#{id}
+	</update>
+	
+	<!-- 软删除 -->
+	<delete id="softDelete" parameterType="int">
+	     update b_goods set disabled=0 where id=#{id}
+	</delete>
+	
+
+</mapper> 
